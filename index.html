@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AM Premium Web Panel</title>
+    <!-- [Semua CSS sama persis dengan punyamu, tidak ada yang diubah sedikitpun] -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Fira+Code&display=swap');
+        :root { --bg-dark: #0f172a; --panel-bg: #1e293b; --primary: #06b6d4; --success: #10b981; --danger: #ef4444; --text-main: #f8fafc; --text-muted: #94a3b8; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text-main); }
+        .content { padding: 20px; padding-bottom: 100px; }
+        .section { display: none; animation: fadeIn 0.4s ease-out; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--panel-bg); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #334155; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); z-index: 999; }
+        .nav-btn { background: transparent; color: var(--text-muted); border: none; padding: 10px 0; font-size: 0.70rem; cursor: pointer; flex: 1; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: 600; border-top: 3px solid transparent; }
+        .nav-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .nav-btn:hover { color: var(--text-main); }
+        .nav-btn.active { color: var(--primary); border-top: 3px solid var(--primary); background: rgba(6, 182, 212, 0.05); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-top: 20px; margin-bottom: 30px; }
+        .card { background: var(--panel-bg); padding: 15px; border-radius: 12px; border: 1px solid #334155; text-align: center; transition: transform 0.3s; }
+        .card h3 { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 5px; }
+        .card p { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 0.9rem;}
+        .form-control { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 8px; outline: none; transition: border 0.3s; }
+        .form-control:focus { border-color: var(--primary); }
+        .btn-submit, .btn-action { background: var(--primary); color: white; border: none; padding: 12px 20px; font-size: 0.95rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-submit { width: 100%; padding: 15px;}
+        .btn-submit:hover, .btn-action:hover { background: #0891b2; box-shadow: 0 0 15px rgba(6, 182, 212, 0.4); }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .terminal { background: #000; padding: 15px; border-radius: 8px; font-family: 'Fira Code', monospace; height: 250px; overflow-y: auto; border: 1px solid #334155; margin-top: 20px; font-size: 0.85rem;}
+        .log-line { margin-bottom: 8px; line-height: 1.4; color: #a3be8c; }
+        .log-line.error { color: #bf616a; }
+        .log-line.info { color: #88c0d0; }
+        .loader { display: none; margin: 20px auto; width: 40px; height: 40px; border: 4px solid #334155; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        .loader-small { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .table-container { overflow-x: auto; margin-top: 15px; background: var(--panel-bg); border-radius: 8px; border: 1px solid #334155; }
+        table { width: 100%; border-collapse: collapse; min-width: 100%; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #334155; font-size: 0.9rem;}
+        th { background: #0f172a; color: var(--primary); font-weight: 600; white-space: nowrap; }
+        tr:hover { background: #293548; }
+        .badge { background: var(--success); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
+        .badge-danger { background: var(--danger); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
+        .api-input-group { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .api-input-group .form-control { flex: 1; min-width: 200px; }
+        .icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; margin-right: 6px; }
+        h1, h2 { display: flex; align-items: center; }
+        h1 .icon, h2 .icon { margin-right: 10px; width: 24px; height: 24px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 10000; opacity: 0; transition: opacity 0.3s; padding: 20px;}
+        .modal-content { background: var(--panel-bg); width: 100%; max-width: 450px; border-radius: 16px; border: 1px solid #334155; transform: scale(0.9); transition: transform 0.3s; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .modal-overlay.show .modal-content { transform: scale(1); }
+        .modal-header { background: #0f172a; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
+        .modal-header h3 { color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; }
+        .close-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 5px; }
+        .close-btn:hover { color: var(--danger); }
+        .modal-body { padding: 20px; }
+        .profile-wrap { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; background: #0f172a; padding: 15px; border-radius: 12px; border: 1px solid #334155; }
+        .profile-pic { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--primary); object-fit: cover; background: #334155; }
+        .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #334155; font-size: 0.9rem; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: var(--text-muted); }
+        .detail-value { font-weight: 600; text-align: right; word-break: break-all; max-width: 60%; }
+        .modal-actions { padding: 20px; background: #0f172a; border-top: 1px solid #334155; display: flex; gap: 10px; flex-direction: column;}
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 8px;}
+        .btn-outline:hover { background: rgba(6, 182, 212, 0.1); }
+        .msg-item { background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; }
+        .msg-item:hover { border-color: var(--primary); transform: translateX(5px); }
+        .msg-sender { font-weight: 600; color: var(--primary); font-size: 0.95rem; margin-bottom: 5px; }
+        .msg-subject { font-size: 0.9rem; color: var(--text-main); margin-bottom: 5px; }
+        .msg-date { font-size: 0.8rem; color: var(--text-muted); text-align: right; }
+        .inbox-view { display: none; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 20px; animation: fadeIn 0.3s; }
+        .inbox-view.active { display: block; }
+        .inbox-list { display: block; }
+        .inbox-list.hidden { display: none; }
+        .inbox-body-content { margin-top: 15px; padding-top: 15px; border-top: 1px solid #334155; font-size: 0.9rem; color: #cbd5e1; word-wrap: break-word; overflow-x: auto; }
+        .inbox-body-content a { color: var(--primary) !important; text-decoration: underline !important; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <!-- [Semua layout HTML sama persis dengan punyamu] -->
+    <div class="content">
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="section active">
+            <h1 style="color: var(--primary);">
+                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+                System Dashboard
+            </h1>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Monitoring Panel & Manajemen API Key</p>
+            
+            <div class="grid" id="stats-grid">
+                <div class="card"><h3>Total Akun</h3><p id="st-total">Loading...</p></div>
+                <div class="card"><h3>RAM Terpakai</h3><p id="st-ram" style="font-size: 1.1rem;">Loading...</p></div>
+                <div class="card"><h3>Storage</h3><p id="st-storage" style="font-size: 1.1rem;">Loading...</p></div>
+                <div class="card"><h3>Processor</h3><p id="st-cpu" style="font-size: 1.1rem;">Loading...</p></div>
+                <div class="card"><h3>Ping</h3><p id="st-ping">Loading...</p></div>
+            </div>
+
+            <div style="background: var(--panel-bg); padding: 20px; border-radius: 12px; border: 1px solid #334155; margin-top: 20px;">
+                <h2 style="color: var(--primary); font-size: 1.1rem; margin-bottom: 15px;">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                    Manajemen API Key Server
+                </h2>
+                <div class="api-input-group">
+                    <input type="text" id="new-api-key" class="form-control" placeholder="Masukkan API Key baru...">
+                    <button class="btn-action" onclick="addApiKey()">
+                        <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg Tambah>
+                    </button>
+                    <button class="btn-action" onclick="fetchStats()" style="background: #334155;">
+                        <svg class="icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg Refresh>
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>API Key (Disamarkan)</th>
+                                <th style="text-align: center;">Terpakai</th>
+                                <th style="text-align: center;">Sisa Limit</th>
+                            </tr>
+                        </thead>
+                        <tbody id="api-body">
+                            <tr><td colspan="4" style="text-align: center;">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auto Create Section -->
+        <div id="auto-create" class="section">
+            <h1 style="color: var(--primary); margin-bottom: 20px;">
+                <svg class="icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Auto Generator
+            </h1>
+            <div style="background: var(--panel-bg); padding: 25px; border-radius: 12px; max-width: 800px; margin: auto;">
+                
+                <div class="form-group">
+                    <label>Durasi Premium (Tahun)</label>
+                    <select id="auto-durasi" class="form-control">
+                        <option value="1">1 Tahun</option><option value="2">2 Tahun</option>
+                        <option value="3">3 Tahun</option><option value="4">4 Tahun</option><option value="5">5 Tahun</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="form-metode">
+                    <label>Metode Input Email</label>
+                    <select id="metode-input" class="form-control" onchange="toggleMetode()">
+                        <option value="auto">Email Otomatis (Sistem)</option>
+                        <option value="manual">Email Pribadi (Manual)</option>
+                    </select>
+                </div>
+
+                <div id="div_auto">
+                    <div class="form-group">
+                        <label>Custom Password (Kosongkan jika ingin random)</label>
+                        <input type="text" id="auto-pass" class="form-control" placeholder="Ketik password manual disini...">
+                    </div>
+                </div>
+
+                <div id="div_manual" style="display: none;">
+                    <div class="form-group">
+                        <label>Alamat Email Pribadi</label>
+                        <input type="email" id="manual-email" class="form-control" placeholder="contoh@gmail.com">
+                    </div>
+                    <button class="btn-action" id="btn-send-link" onclick="sendMagicLink()" style="margin-bottom: 20px; width: 100%;">
+                        <svg class="icon" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        Kirim Magic Link
+                    </button>
+
+                    <div class="form-group" id="rawlink-container" style="display: none;">
+                        <label>Raw Link (Dari Email)</label>
+                        <input type="text" id="manual-rawlink" class="form-control" placeholder="Paste rawLink dari email disini...">
+                    </div>
+                </div>
+
+                <div class="checkbox-group" id="form-profile-check">
+                    <input type="checkbox" id="auto-profile" checked style="width: 18px; height: 18px; flex-shrink: 0;">
+                    <label for="auto-profile" style="margin: 0; color: white;">Terapkan Profil Default (Rename & Foto)</label>
+                </div>
+
+                <button class="btn-submit" id="btn-start" onclick="executeProcess()">
+                    <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> MULAI PROSES
+                </button>
+                <button class="btn-submit" id="btn-start-manual" onclick="startManualProcess()" style="display: none;">
+                    <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> PROSES PREMIUM MANUAL
+                </button>
+                
+                <div class="loader" id="process-loader"></div>
+                <div class="terminal" id="terminal-log">
+                    <div class="log-line info">Waiting for command...</div>
+                </div>
+
+                <div id="result-card" style="display: none; background: #0f172a; padding: 20px; border-radius: 12px; margin-top: 20px; border: 1px solid #10b981; animation: fadeIn 0.5s;">
+                    <h3 style="color: #10b981; text-align: center; margin-bottom: 15px;">🎉 PREMIUM BERHASIL DITERAPKAN</h3>
+                    
+                    <div class="profile-wrap" style="background: #1e293b; margin-bottom: 15px;">
+                        <img id="res-photo" src="" alt="Profile" class="profile-pic">
+                        <div>
+                            <div id="res-name" style="color: white; font-weight: bold; font-size: 1.1rem;">Nama Profil</div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem;">Profil Akun AM</div>
+                        </div>
+                    </div>
+
+                    <div style="background: #1e293b; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <div class="detail-row"><span class="detail-label">Email:</span><span class="detail-value" id="res-email">-</span></div>
+                        <div class="detail-row"><span class="detail-label">Password:</span><span class="detail-value" id="res-pass" style="color: #10b981; font-family: monospace;">-</span></div>
+                        <div class="detail-row"><span class="detail-label">Durasi:</span><span class="detail-value" id="res-dur" style="color: var(--primary);">-</span></div>
+                        <div class="detail-row"><span class="detail-label">Order:</span><span class="detail-value" id="res-code" style="color: var(--primary); font-family: monospace;">-</span></div>
+                    </div>
+
+                    <button class="btn-submit" id="btn-login-web" onclick="webLoginAkunFromCard()" style="background: #10b981;">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> 
+                        CARI LINK LOGIN DI INBOX
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Inbox Khusus -->
+        <div id="inbox-tab" class="section">
+            <h1 style="color: var(--primary); margin-bottom: 20px;">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                Custom Inbox
+            </h1>
+            <div style="background: var(--panel-bg); padding: 25px; border-radius: 12px; border: 1px solid #334155;">
+                <div class="form-group">
+                    <label>Pilih Email dari History (Otomatis login)</label>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="inbox-account-select" class="form-control" onchange="autoFetchInbox()">
+                            <option value="">-- Pilih Email Otomatis --</option>
+                        </select>
+                        <button class="btn-action" onclick="fetchInboxAccounts()" style="background: #334155;" title="Refresh Email List">
+                            <svg class="icon" viewBox="0 0 24 24" style="margin:0;"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="inbox-list-container" class="inbox-list">
+                    <div id="inbox-messages" style="margin-top: 15px;">
+                        <div style="text-align: center; color: var(--text-muted); padding: 20px;">Pilih email di atas untuk melihat pesan masuk.</div>
+                    </div>
+                </div>
+
+                <div id="inbox-view-container" class="inbox-view">
+                    <button class="btn-outline" onclick="backToInboxList()" style="margin-bottom: 15px; padding: 8px 15px; font-size: 0.85rem;">
+                        <svg class="icon" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Kembali
+                    </button>
+                    <h3 id="view-subject" style="color: var(--primary); margin-bottom: 5px;">Subjek Pesan</h3>
+                    <div id="view-sender" style="color: var(--text-muted); font-size: 0.85rem; padding-bottom: 15px;">Dari: Pengirim</div>
+                    
+                    <div id="view-body" class="inbox-body-content">
+                        Memuat isi pesan...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div id="history" class="section">
+            <h1 style="color: var(--primary); margin-bottom: 20px;">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                History Pembuatan
+            </h1>
+            <button onclick="fetchHistory()" class="btn-action" style="background: #334155; margin-bottom: 15px;">
+                <svg class="icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Refresh List
+            </button>
+            <div class="table-container">
+                <table id="history-table">
+                    <thead>
+                        <tr>
+                            <th>Email Terdaftar</th>
+                            <th style="text-align: right;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body">
+                        <tr><td colspan="2" style="text-align: center;">Memuat data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div id="settings-tab" class="section">
+            <h1 style="color: var(--primary); margin-bottom: 20px;">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                Settings Profil Default
+            </h1>
+            <div style="background: var(--panel-bg); padding: 25px; border-radius: 12px; max-width: 600px; margin: auto; border: 1px solid #334155;">
+                <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.9rem;">Atur Nama dan URL Foto Profil yang akan otomatis diterapkan setiap kamu membuat akun baru.</p>
+                
+                <div class="form-group">
+                    <label>Nama Profil Akun</label>
+                    <input type="text" id="set-name" class="form-control" placeholder="Contoh: SYAA STORE">
+                </div>
+                <div class="form-group">
+                    <label>URL Foto Profil (.jpg / .png)</label>
+                    <input type="text" id="set-photo" class="form-control" placeholder="https://contoh.com/foto.jpg">
+                </div>
+                
+                <button class="btn-submit" onclick="saveProfileData()">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> 
+                    SIMPAN PENGATURAN
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Navigation Bawah -->
+    <div class="bottom-nav">
+        <button class="nav-btn active" onclick="switchTab('dashboard', event)">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard
+        </button>
+        <button class="nav-btn" onclick="switchTab('auto-create', event)">
+            <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Generate
+        </button>
+        <button class="nav-btn" onclick="switchTab('inbox-tab', event)">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Inbox
+        </button>
+        <button class="nav-btn" onclick="switchTab('history', event)">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>History
+        </button>
+        <button class="nav-btn" onclick="switchTab('settings-tab', event)">
+            <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings
+        </button>
+    </div>
+
+    <!-- Modal Popup Detail Akun -->
+    <div id="detail-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Detail Akun</h3>
+                <button class="close-btn" onclick="closeModal()">
+                    <svg class="icon" viewBox="0 0 24 24" style="margin:0;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="profile-wrap">
+                    <img id="mod-photo" src="" alt="Profile" class="profile-pic">
+                    <div>
+                        <div id="mod-name" style="color: white; font-weight: bold; font-size: 1.1rem;">-</div>
+                        <div style="color: var(--text-muted); font-size: 0.8rem;" id="mod-waktu">-</div>
+                    </div>
+                </div>
+                
+                <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value" id="mod-email">-</span></div>
+                <div class="detail-row"><span class="detail-label">Password</span><span class="detail-value" id="mod-pass" style="color: #10b981; font-family: monospace;">-</span></div>
+                <div class="detail-row"><span class="detail-label">Premium</span><span class="detail-value" id="mod-dur" style="color: var(--primary);">-</span></div>
+                <div class="detail-row"><span class="detail-label">Code Order</span><span class="detail-value" id="mod-code" style="color: var(--primary); font-family: monospace;">-</span></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-action" onclick="addLicenseFromHistory()" style="background: var(--primary); width: 100%;">
+                    <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Tambah Lisensi (Merge)
+                </button>
+                <button class="btn-outline" id="btn-login-modal" onclick="webLoginAkunFromModal()">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Loginkan Akun ke Inbox
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT INI YANG DITAMBAHKAN VARIABEL URL BACKEND -->
+    <script>
+        // ==========================================
+        // GANTI INI DENGAN IP/DOMAIN PTERODACTYL KAMU
+        // Contoh: "http://123.45.67.89:5000"
+        // ==========================================
+        const BACKEND_URL = "167.71.217.3:2614"; 
+        
+        // Custom Fetch Helper agar tidak mengubah seluruh logic di bawahnya
+        const originalFetch = window.fetch;
+        window.fetch = function() {
+            let [resource, config] = arguments;
+            if(typeof resource === 'string' && resource.startsWith('/api/')) {
+                resource = BACKEND_URL + resource;
+            }
+            return originalFetch(resource, config);
+        };
+
+        let pollingInterval = null;
+        let globalHistoryData = [];
+        let currentModalIdx = -1;
+        let inboxToken = "";
+
+        function switchTab(tabId, event) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            if(event) {
+                event.currentTarget.classList.add('active');
+            } else {
+                document.querySelector(`.nav-btn[onclick*="${tabId}"]`).classList.add('active');
+            }
+            
+            if(tabId === 'dashboard') fetchStats();
+            if(tabId === 'history') fetchHistory();
+            if(tabId === 'inbox-tab') fetchInboxAccounts();
+            if(tabId === 'settings-tab') loadProfileData();
+            window.scrollTo(0,0);
+        }
+
+        async function loadProfileData() {
+            try {
+                let res = await fetch('/api/get_profile');
+                let data = await res.json();
+                document.getElementById('set-name').value = data.default_name || '';
+                document.getElementById('set-photo').value = data.default_photo || '';
+            } catch(e) { console.error(e); }
+        }
+
+        async function saveProfileData() {
+            let name = document.getElementById('set-name').value.trim();
+            let photo = document.getElementById('set-photo').value.trim();
+            try {
+                let res = await fetch('/api/save_profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name, photo: photo })
+                });
+                let data = await res.json();
+                alert(data.msg);
+            } catch(e) { alert("Error menyimpan profil."); }
+        }
+
+        function toggleMetode() {
+            let metode = document.getElementById('metode-input').value;
+            if(metode === 'auto') {
+                document.getElementById('div_auto').style.display = 'block';
+                document.getElementById('div_manual').style.display = 'none';
+                document.getElementById('btn-start').style.display = 'flex';
+                document.getElementById('btn-start-manual').style.display = 'none';
+            } else {
+                document.getElementById('div_auto').style.display = 'none';
+                document.getElementById('div_manual').style.display = 'block';
+                document.getElementById('btn-start').style.display = 'none';
+                document.getElementById('btn-start-manual').style.display = 'none';
+                document.getElementById('rawlink-container').style.display = 'none';
+                document.getElementById('btn-send-link').style.display = 'flex';
+                document.getElementById('btn-send-link').disabled = false;
+            }
+        }
+
+        async function fetchStats() {
+            try {
+                let res = await fetch('/api/stats');
+                let data = await res.json();
+                document.getElementById('st-total').innerText = data.total_akun;
+                document.getElementById('st-ram').innerText = data.ram;
+                document.getElementById('st-storage').innerText = data.storage;
+                document.getElementById('st-cpu').innerText = data.processor;
+                document.getElementById('st-ping').innerText = data.ping;
+
+                let tbody = document.getElementById('api-body');
+                tbody.innerHTML = '';
+                if(data.api_keys && data.api_keys.length > 0) {
+                    data.api_keys.forEach((api, idx) => {
+                        let terpakaiBadge = api.terpakai >= 15 ? `<span class="badge-danger">${api.terpakai}</span>` : `<span class="badge">${api.terpakai}</span>`;
+                        let sisaBadge = api.sisa <= 0 ? `<span class="badge-danger">${api.sisa}</span>` : `<span class="badge">${api.sisa}</span>`;
+                        
+                        let tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${idx + 1}</td>
+                            <td style="font-family: monospace;">${api.key}</td>
+                            <td style="text-align: center;">${terpakaiBadge}</td>
+                            <td style="text-align: center;">${sisaBadge}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Belum ada API Key tersimpan</td></tr>';
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function addApiKey() {
+            let keyInput = document.getElementById('new-api-key');
+            let keyVal = keyInput.value.trim();
+            if(!keyVal) return alert("API Key tidak boleh kosong!");
+
+            try {
+                let res = await fetch('/api/add_key', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: keyVal })
+                });
+                let data = await res.json();
+                alert(data.msg);
+                keyInput.value = '';
+                fetchStats();
+            } catch (err) { console.error(err); alert("Gagal menyambung ke server"); }
+        }
+
+        async function fetchHistory() {
+            try {
+                let res = await fetch('/api/history');
+                let data = await res.json();
+                let tbody = document.getElementById('history-body');
+                tbody.innerHTML = '';
+                
+                if(data.length === 0) { 
+                    tbody.innerHTML = '<tr><td colspan="2" style="text-align: center;">Belum ada data</td></tr>'; 
+                    return; 
+                }
+                
+                globalHistoryData = data.reverse();
+                globalHistoryData.forEach((row, idx) => {
+                    let tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>
+                            <strong style="display:block; margin-bottom:4px;">${row.email}</strong>
+                            <span class="badge">${row.status}</span>
+                        </td>
+                        <td style="text-align: right; vertical-align: middle;">
+                            <button class="btn-action" style="padding: 8px 12px; font-size: 0.85rem;" onclick="openDetailModal(${idx})">
+                                <svg class="icon" viewBox="0 0 24 24" style="margin:0;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Detail
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        function openDetailModal(idx) {
+            currentModalIdx = idx;
+            let row = globalHistoryData[idx];
+            
+            document.getElementById('mod-email').innerText = row.email;
+            document.getElementById('mod-pass').innerText = row.password;
+            document.getElementById('mod-dur').innerText = row.status;
+            document.getElementById('mod-code').innerText = row.codeorder || "-";
+            document.getElementById('mod-waktu').innerText = row.waktu || "-";
+            
+            let profileName = (row.rename && row.rename !== "Tidak") ? row.rename : "Nama Tidak Diset";
+            document.getElementById('mod-name').innerText = profileName;
+            
+            let photoUrl = row.foto;
+            if(!photoUrl || photoUrl === "") {
+                let initialName = profileName === "Nama Tidak Diset" ? row.email : profileName;
+                photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(initialName)}&background=06b6d4&color=fff&size=128`;
+            }
+            document.getElementById('mod-photo').src = photoUrl;
+            
+            let btnLogin = document.getElementById('btn-login-modal');
+            if(row.password === "Manual" || row.password === "-" || !row.password) {
+                btnLogin.style.display = 'none';
+            } else {
+                btnLogin.style.display = 'flex';
+                btnLogin.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Loginkan Akun ke Inbox`;
+                btnLogin.disabled = false;
+            }
+
+            let modal = document.getElementById('detail-modal');
+            modal.classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('detail-modal').classList.remove('show');
+        }
+
+        function addLicenseFromHistory() {
+            if(currentModalIdx < 0) return;
+            let row = globalHistoryData[currentModalIdx];
+            closeModal();
+            
+            let inputStr = prompt(`Berapa tahun tambahan lisensi untuk\n${row.email}?\n(Maksimal 5 Tahun)`, "1");
+            if(inputStr === null) return; 
+            
+            let durasi = parseInt(inputStr);
+            if(isNaN(durasi) || durasi < 1 || durasi > 5) {
+                alert("Durasi tidak valid. Harus antara 1 - 5.");
+                return;
+            }
+
+            switchTab('auto-create', null);
+            
+            document.getElementById('form-metode').style.display = 'none';
+            document.getElementById('div_auto').style.display = 'none';
+            document.getElementById('div_manual').style.display = 'none';
+            document.getElementById('form-profile-check').style.display = 'none';
+            document.getElementById('btn-start').style.display = 'none';
+            document.getElementById('btn-start-manual').style.display = 'none';
+            document.getElementById('result-card').style.display = 'none';
+            
+            let term = document.getElementById('terminal-log');
+            let loader = document.getElementById('process-loader');
+            
+            loader.style.display = 'block';
+            term.innerHTML = `<div class="log-line info">Memulai penambahan ${durasi} Tahun lisensi untuk ${row.email}...</div>`;
+
+            executeHistoryMergeTask(row.email, row.password, durasi, true);
+        }
+
+        async function executeHistoryMergeTask(email, password, durasi, useProfile) {
+            let term = document.getElementById('terminal-log');
+            try {
+                let res = await fetch('/api/start_history_add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, password: password, durasi: durasi, use_profile: useProfile })
+                });
+                let data = await res.json();
+                pollTask(data.task_id, true);
+            } catch (err) {
+                term.innerHTML += `<div class="log-line error">Error: ${err.message}</div>`;
+                resetBtn();
+            }
+        }
+
+        async function fetchInboxAccounts() {
+            try {
+                let res = await fetch('/api/inbox/list_accounts');
+                let accounts = await res.json();
+                let sel = document.getElementById('inbox-account-select');
+                let currentVal = sel.value;
+                sel.innerHTML = '<option value="">-- Pilih Email Otomatis --</option>';
+                
+                accounts.forEach(acc => {
+                    let opt = document.createElement('option');
+                    opt.value = acc.email;
+                    opt.text = acc.email;
+                    opt.dataset.pass = acc.password;
+                    sel.appendChild(opt);
+                });
+                if(currentVal) sel.value = currentVal;
+            } catch(e) { console.error(e); }
+        }
+
+        async function autoFetchInbox() {
+            let sel = document.getElementById('inbox-account-select');
+            if(!sel.value) return;
+            let email = sel.value;
+            let pass = sel.options[sel.selectedIndex].dataset.pass;
+            
+            let msgContainer = document.getElementById('inbox-messages');
+            msgContainer.innerHTML = '<div style="text-align:center; padding:20px;"><div class="loader-small"></div> Sedang login dan menarik data...</div>';
+            
+            backToInboxList();
+
+            try {
+                let res = await fetch('/api/inbox/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, password: pass })
+                });
+                let data = await res.json();
+                
+                if(data.status === 'success') {
+                    inboxToken = data.token;
+                    msgContainer.innerHTML = '';
+                    if(data.messages.length === 0) {
+                        msgContainer.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px;">Kotak masuk kosong.</div>';
+                    } else {
+                        data.messages.forEach(msg => {
+                            let div = document.createElement('div');
+                            div.className = 'msg-item';
+                            div.onclick = () => viewMessageDetail(msg.id, msg.subject, msg.from.address);
+                            
+                            let dateObj = new Date(msg.createdAt);
+                            let dateStr = dateObj.toLocaleString('id-ID', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+
+                            div.innerHTML = `
+                                <div class="msg-sender">${msg.from.name || msg.from.address}</div>
+                                <div class="msg-subject">${msg.subject}</div>
+                                <div class="msg-date">${dateStr}</div>
+                            `;
+                            msgContainer.appendChild(div);
+                        });
+                    }
+                } else {
+                    msgContainer.innerHTML = `<div style="text-align:center; color:var(--danger); padding:20px;">Error: ${data.msg}</div>`;
+                }
+            } catch(e) {
+                msgContainer.innerHTML = `<div style="text-align:center; color:var(--danger); padding:20px;">Koneksi gagal.</div>`;
+            }
+        }
+
+        async function viewMessageDetail(msgId, subject, sender) {
+            document.getElementById('inbox-list-container').classList.add('hidden');
+            let viewContainer = document.getElementById('inbox-view-container');
+            viewContainer.classList.add('active');
+            
+            document.getElementById('view-subject').innerText = subject;
+            document.getElementById('view-sender').innerText = "Dari: " + sender;
+            let bodyDiv = document.getElementById('view-body');
+            bodyDiv.innerHTML = '<div class="loader-small" style="border-top-color:var(--primary);"></div> Memuat pesan...';
+            
+            try {
+                let res = await fetch(`/api/inbox/message/${msgId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: inboxToken })
+                });
+                let data = await res.json();
+                
+                if(data.status === 'success') {
+                    let content = data.content;
+                    if(!content.includes('<div') && !content.includes('<html') && !content.includes('<br>')) {
+                        content = content.replace(/\n/g, '<br>');
+                    }
+                    bodyDiv.innerHTML = content;
+                } else {
+                    bodyDiv.innerHTML = `<span style="color:var(--danger)">Error: ${data.msg}</span>`;
+                }
+            } catch(e) {
+                bodyDiv.innerHTML = `<span style="color:var(--danger)">Gagal memuat pesan.</span>`;
+            }
+        }
+
+        function backToInboxList() {
+            document.getElementById('inbox-view-container').classList.remove('active');
+            document.getElementById('inbox-list-container').classList.remove('hidden');
+        }
+
+        function goToInboxAndLogin(email, password) {
+            closeModal();
+            switchTab('inbox-tab', null);
+            
+            let sel = document.getElementById('inbox-account-select');
+            let found = false;
+            for(let i=0; i<sel.options.length; i++) {
+                if(sel.options[i].value === email) { found = true; sel.selectedIndex = i; break; }
+            }
+            if(!found) {
+                let opt = document.createElement('option');
+                opt.value = email;
+                opt.text = email;
+                opt.dataset.pass = password;
+                sel.appendChild(opt);
+                sel.value = email;
+            }
+            autoFetchInbox();
+        }
+
+        function webLoginAkunFromCard() {
+            let email = document.getElementById('res-email').innerText;
+            let pass = document.getElementById('res-pass').innerText;
+            goToInboxAndLogin(email, pass);
+        }
+
+        function webLoginAkunFromModal() {
+            if(currentModalIdx < 0) return;
+            let row = globalHistoryData[currentModalIdx];
+            goToInboxAndLogin(row.email, row.password);
+        }
+
+        async function sendMagicLink() {
+            let email = document.getElementById('manual-email').value.trim();
+            let term = document.getElementById('terminal-log');
+            let loader = document.getElementById('process-loader');
+            let btn = document.getElementById('btn-send-link');
+
+            if(!email) { alert('Email tidak boleh kosong!'); return; }
+
+            btn.disabled = true;
+            loader.style.display = 'block';
+            term.innerHTML = '<div class="log-line info">Mengirim Magic Link...</div>';
+            document.getElementById('result-card').style.display = 'none';
+
+            try {
+                let res = await fetch('/api/web_send_magiclink', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+                let data = await res.json();
+                if(data.status === 'success') {
+                    term.innerHTML += `<div class="log-line info">✅ ${data.msg}</div>`;
+                    term.innerHTML += `<div class="log-line info">Silakan cek email dan paste rawLink di bawah.</div>`;
+                    document.getElementById('rawlink-container').style.display = 'block';
+                    document.getElementById('btn-start-manual').style.display = 'flex';
+                    btn.style.display = 'none';
+                } else {
+                    term.innerHTML += `<div class="log-line error">❌ ${data.msg}</div>`;
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                term.innerHTML += `<div class="log-line error">Error: ${err.message}</div>`;
+                btn.disabled = false;
+            }
+            loader.style.display = 'none';
+        }
+
+        async function startManualProcess() {
+            let email = document.getElementById('manual-email').value.trim();
+            let rawLink = document.getElementById('manual-rawlink').value.trim();
+            let durasi = document.getElementById('auto-durasi').value;
+            let useProfile = document.getElementById('auto-profile').checked;
+            let btn = document.getElementById('btn-start-manual');
+            let term = document.getElementById('terminal-log');
+            let loader = document.getElementById('process-loader');
+
+            if(!rawLink) { alert('Raw Link tidak boleh kosong!'); return; }
+
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            loader.style.display = 'block';
+            document.getElementById('result-card').style.display = 'none';
+            term.innerHTML += '<div class="log-line info">Memulai eksekusi Manual...</div>';
+
+            try {
+                let res = await fetch('/api/start_manual', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, raw_link: rawLink, durasi: durasi, use_profile: useProfile })
+                });
+                let data = await res.json();
+                pollTask(data.task_id, false);
+            } catch (err) {
+                term.innerHTML += `<div class="log-line error">Error: ${err.message}</div>`;
+                resetBtn();
+            }
+        }
+
+        async function executeProcess() {
+            let durasi = document.getElementById('auto-durasi').value;
+            let customPass = document.getElementById('auto-pass').value;
+            let useProfile = document.getElementById('auto-profile').checked;
+            let btn = document.getElementById('btn-start');
+            let term = document.getElementById('terminal-log');
+            let loader = document.getElementById('process-loader');
+
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            loader.style.display = 'block';
+            document.getElementById('result-card').style.display = 'none';
+            term.innerHTML = '<div class="log-line info">Memulai koneksi ke API Worker...</div>';
+
+            try {
+                let res = await fetch('/api/start_auto', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ durasi: durasi, custom_pass: customPass, use_profile: useProfile })
+                });
+                let data = await res.json();
+                pollTask(data.task_id, false);
+            } catch (err) {
+                term.innerHTML += `<div class="log-line error">Error: ${err.message}</div>`;
+                resetBtn();
+            }
+        }
+
+        function pollTask(taskId, isMergeMode) {
+            let term = document.getElementById('terminal-log');
+            if(pollingInterval) clearInterval(pollingInterval);
+
+            pollingInterval = setInterval(async () => {
+                try {
+                    let res = await fetch(`/api/task/${taskId}`);
+                    let data = await res.json();
+                    
+                    term.innerHTML = '';
+                    data.logs.forEach(log => {
+                        let colorClass = log.includes('✖') || log.includes('❌') ? 'error' : (log.includes('✅') || log.includes('🎉') ? 'info' : '');
+                        term.innerHTML += `<div class="log-line ${colorClass}">${log}</div>`;
+                    });
+                    term.scrollTop = term.scrollHeight;
+
+                    if(data.status === 'done' || data.status === 'error') {
+                        clearInterval(pollingInterval);
+                        resetBtn();
+                        
+                        if(data.status === 'done') {
+                            showResultCard();
+                        }
+                    }
+                } catch (err) { console.error(err); }
+            }, 1500);
+        }
+
+        async function showResultCard() {
+            try {
+                let hRes = await fetch('/api/history');
+                let hData = await hRes.json();
+                
+                if(hData && hData.length > 0) {
+                    let latest = hData[hData.length - 1]; 
+                    
+                    document.getElementById('res-email').innerText = latest.email;
+                    document.getElementById('res-pass').innerText = latest.password;
+                    document.getElementById('res-dur').innerText = latest.status;
+                    document.getElementById('res-code').innerText = latest.codeorder;
+                    
+                    let profileName = (latest.rename && latest.rename !== "Tidak") ? latest.rename : "Nama Profil Standar";
+                    let photoUrl = latest.foto;
+                    if(!photoUrl || photoUrl === "") {
+                        let initialName = profileName === "Nama Profil Standar" ? latest.email : profileName;
+                        photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(initialName)}&background=06b6d4&color=fff&size=128`;
+                    }
+                    
+                    document.getElementById('res-name').innerText = profileName;
+                    document.getElementById('res-photo').src = photoUrl;
+                    
+                    document.getElementById('result-card').style.display = 'block';
+                    
+                    let btnLogin = document.getElementById('btn-login-web');
+                    if(latest.password === "Manual" || latest.password === "-" || !latest.password) {
+                        btnLogin.style.display = 'none';
+                    } else {
+                        btnLogin.style.display = 'flex';
+                        btnLogin.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> CARI LINK LOGIN DI INBOX`;
+                        btnLogin.onclick = webLoginAkunFromCard;
+                    }
+                    
+                    setTimeout(() => {
+                        document.getElementById('result-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 500);
+                }
+                fetchHistory(); 
+                fetchInboxAccounts(); 
+            } catch(err) { console.error("Gagal load result card:", err); }
+        }
+
+        function resetBtn() {
+            let btnAuto = document.getElementById('btn-start');
+            let btnManual = document.getElementById('btn-start-manual');
+            let btnSend = document.getElementById('btn-send-link');
+            
+            btnAuto.disabled = false; btnAuto.style.opacity = '1';
+            btnManual.disabled = false; btnManual.style.opacity = '1';
+            btnSend.disabled = false; btnSend.style.opacity = '1';
+            
+            document.getElementById('form-metode').style.display = 'block';
+            let metode = document.getElementById('metode-input').value;
+            if(metode === 'auto') {
+                document.getElementById('div_auto').style.display = 'block';
+                btnAuto.style.display = 'flex';
+            } else {
+                document.getElementById('div_manual').style.display = 'block';
+                if(document.getElementById('rawlink-container').style.display === 'block') {
+                    btnManual.style.display = 'flex';
+                }
+            }
+            document.getElementById('form-profile-check').style.display = 'flex';
+            document.getElementById('process-loader').style.display = 'none';
+        }
+
+        fetchStats();
+    </script>
+</body>
+</html>
